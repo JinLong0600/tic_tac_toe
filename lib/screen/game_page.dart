@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
-import '../styles//colors.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/services.dart' show ByteData, rootBundle;
 
 class GamePage extends StatefulWidget {
   //const GamePage({Key? key}) : super(key: key);
@@ -23,21 +21,18 @@ class IndexAndValue {
 }
 
 class _GamePageState extends State<GamePage> {
-  //Player turns
+  //Player Turns
   bool oTurn = true;
+  // Total filled in order to check whether the match is a draw
   int filledBoxes = 0;
-
-  bool winnerFound = false;
+  // Outplay message when a winner is produced
   String resultDeclartion = '';
-
-  List<String> displayX0 = List.filled(9, 'images/transparent.png');
-  //List<string> displayX0 = List.generate(9, (index) => Image.asset('images/transparent.png'));
+  // Winning combination
   List<int> matchIndexes = [];
+  // Fill the grid will empty image
+  List<String> displayX0 = List.filled(9, 'images/transparent.png');
+
   AudioPlayer audioPlayer = AudioPlayer();
-  Future<AudioPlayer> playSound() async {
-    int result = await audioPlayer.play('audio/click.mp3', isLocal: true);
-    return audioPlayer;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,35 +100,38 @@ class _GamePageState extends State<GamePage> {
                   itemBuilder: (BuildContext, int index){
                     return GestureDetector(
                       onTap: () async {
-                        playSound();
+                        playSound('audio/click.mp3', 1);
                         _tapped(index);
                         if(!widget.isPvP){
+                          // Delay 0.5 sec before the move is made by Computer
                           Future.delayed(Duration(milliseconds: 500), ()
                           {
                             if(resultDeclartion == ''){
                               if(widget.isPcEasy)
                                 {
                                   EasyComputer();
-                                  playSound();
                                 }
                               else
                                 {
                                   NormalComputer();
-                                  playSound();
                                 }
                             }
                           });
                         }
-
                       },
                       child: Container(
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
                               width: 10,
-                              color: MainColor.primaryColor,
+                              color: Colors.black,
                             ),
-                            color: matchIndexes.contains(index) ? MainColor.accentColor : MainColor.secondaryColor
+                            gradient: RadialGradient(
+                            colors : matchIndexes.contains(index) ? [Color(0xFF003A6C), Color(0xFF89CFF0), Color(0xFFB0E0E6)] : [Color(0xFF47046C), Color(0xFF731E9D), Color(0xFFA041C5)],
+                            center: Alignment.topLeft, radius: 3
+                            ),
+
+                            //color: matchIndexes.contains(index) ? MainColor.accentColor : MainColor.secondaryColor
                         ),
                         child: Center(
                           child: Image.asset(displayX0[index]),
@@ -150,23 +148,32 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  // Play sound effects
+  Future<AudioPlayer> playSound(String fileName, double volume) async {
+    await audioPlayer.play(fileName, isLocal: true);
+    audioPlayer.setVolume(volume);
+    return audioPlayer;
+  }
+
   void _tapped(int index) {
     setState(() {
       // When player tapped on the slot will
       if (oTurn && displayX0[index]  == 'images/transparent.png') {
-        displayX0[index] = 'images/white_o.png';//Image.asset('images/white_o.png');
+        displayX0[index] = 'images/white_o.png';
         filledBoxes++;
+        // Change player turns
+        oTurn = false;
       }
       else if (widget.isPvP && !oTurn && displayX0[index] == 'images/transparent.png') {
-        displayX0[index] = 'images/white_x.png';//Image.asset('images/white_x.png');
+        displayX0[index] = 'images/white_x.png';
         filledBoxes++;
+        // Change player turns
+        oTurn = true;
       }
 
+      // Check winner during each tap
       _checkWinner();
-
-      oTurn = !oTurn;
-    }
-    );
+    });
   }
 
   // Difficulty Easy for Computer
@@ -183,27 +190,32 @@ class _GamePageState extends State<GamePage> {
 
     // Change the image from transparent.png to X image
     setState(() {
-      if (displayX0[num]  == 'images/transparent.png') {
+
+      if (!oTurn && displayX0[num]  == 'images/transparent.png') {
         displayX0[num] = 'images/white_x.png';//Image.asset('images/white_x.png');
         filledBoxes++;
+
+        // Change player turns
+        oTurn = true;
+
+        // Play sound effect
+        playSound('audio/click.mp3', 1);
       }
       // Check did it win after the move
       _checkWinner();
-
-      // Lastly update the turn
-      oTurn = !oTurn;
     });
   }
 
   // Difficulty Normal for Computer
   void NormalComputer(){
-    // Init slot that has placed by O
+    Random random = new Random();
+    // Will be used to record which slot has been placed by O.
     List<int> slotO = [];
 
-    // Init losing condition for X
+    // Losing percentage based on the winning combinations by O. In total is 8 combinations
     List<int> losingPercentage = [0,0,0,0,0,0,0,0];
 
-    // List out all the winning combinations
+    // List out all the winning combinations for O
     List<Set<int>> listOWinningSets = [
       {0, 1, 2},
       {3, 4, 5},
@@ -215,7 +227,14 @@ class _GamePageState extends State<GamePage> {
       {2, 4, 6},
     ];
 
+    // To Store the Largest and 2nd Largest Losing Percantage from the combination
+    var maxIndex = IndexAndValue(value: null, indices: []);
+    var secondMaxIndex= IndexAndValue(value: null, indices: []);
+
     //
+    List<int> randomWinningCombination = [];
+
+    // Add the slot that has mark as O into "slotO"
     displayX0.asMap().forEach((index, value) {
       if (value == 'images/white_o.png')
       {
@@ -223,10 +242,10 @@ class _GamePageState extends State<GamePage> {
       }
     });
 
-
-
+    // Adding the losingPercentage for X based on the winningCombiation of O
     for(int index in slotO)
     {
+      // Based on rows
       if(listOWinningSets[0].contains(index))
       {
         losingPercentage[0] += 33; // A
@@ -240,6 +259,7 @@ class _GamePageState extends State<GamePage> {
         losingPercentage[2] += 33; // C
       }
 
+      // Based on Columns
       if(listOWinningSets[3].contains(index))
       {
         losingPercentage[3] += 33; // D
@@ -253,6 +273,7 @@ class _GamePageState extends State<GamePage> {
         losingPercentage[5] += 33; // F
       }
 
+      // Based on Diagonal
       if(listOWinningSets[6].contains(index))
       {
         losingPercentage[6] += 33; // G
@@ -263,9 +284,7 @@ class _GamePageState extends State<GamePage> {
       }
     }
 
-    var maxIndex = IndexAndValue(value: null, indices: []);
-    var secondMaxIndex= IndexAndValue(value: null, indices: []);
-
+    // Getting the largest and 2nd large losing percentage combinations
     losingPercentage.asMap().forEach((index, value) {
       if (maxIndex.value == null || value > maxIndex.value!) {
         maxIndex = IndexAndValue(value: value, indices: [index]);
@@ -277,99 +296,86 @@ class _GamePageState extends State<GamePage> {
         secondMaxIndex!.indices.add(index);
       }
     });
-    //print('${losingPercentage} step 2: The highest value is ${maxIndex.value} at index/indices: ${maxIndex.indices}');
 
-    //print('step 3: The 2nd highest value is ${secondMaxIndex.value} at index/indices: ${secondMaxIndex.indices}');
-    //print('step 4: The 2nd highest value but is maxIndex is ${maxIndex.value} at index/indices: ${maxIndex.indices}');
-    Random random = new Random();
-
-    List<int> toberandom = [];
-
-    while(toberandom.isEmpty)
+    // 1st looping to get the Winning Combination based on the Largest losing percentages
+    while(randomWinningCombination.isEmpty)
     {
+      // Check the 1st Largest percentages whether all the move inside has been made.
       if(maxIndex.indices.isNotEmpty)
       {
+        // Random the moves inside the winning combinations
         int largestIndex = random.nextInt(maxIndex.indices.length);
-        print('1st if ${maxIndex.indices}');
-        int randomValue = maxIndex.indices[largestIndex]; // the value is respented as set
-        print('start of if ${maxIndex.indices.length}');
-        for(int val in listOWinningSets[randomValue])
-        {
-          if(displayX0[val] == 'images/transparent.png')
-          {
-            toberandom.add(val);
-          }
-        }
-        if(toberandom.isEmpty)
-        {
-          print('start to remove ${randomValue}');
-          maxIndex.indices.remove(randomValue);
-          print('removed');
-        }
-      }
-      else if(secondMaxIndex.indices.isEmpty)
-      {
-        print('2nd if');
-        int secondLargestIndex = random.nextInt(secondMaxIndex.indices.length);
-        int randomValue = secondMaxIndex.indices[secondLargestIndex]; // the value is respented as set
-        for(int val in listOWinningSets[randomValue])
-        {
-          if(displayX0[val] == 'images/transparent.png')
-          {
-            toberandom.add(val);
-          }
-        }
-        if(toberandom.isEmpty)
-        {
-          secondMaxIndex.indices.remove(randomValue);
-        }
+        int randomValue = maxIndex.indices[largestIndex];
 
+        // Looping for checking the available moves
+        for(int val in listOWinningSets[randomValue])
+        {
+          // Check all the moves inside the winning combination is still available
+          if(displayX0[val] == 'images/transparent.png')
+          {
+            randomWinningCombination.add(val);
+          }
+        }
+        // Check the available move inside the winning combination is all been made
+        if(randomWinningCombination.isEmpty)
+        {
+          // If yes, remove the winning combination
+          maxIndex.indices.remove(randomValue);
+        }
       }
+      // Else  break loop
       else{
         break;
       }
     }
 
-
-    print(toberandom.length);
-    if(toberandom.length == 0 || toberandom.isEmpty)
+    // If 1st Largest percentages has no more moves will proceed into the second one.
+    if(randomWinningCombination.length == 0 || randomWinningCombination.isEmpty)
     {
-      print('enter');
-      while(toberandom.isEmpty)
+      // 2nd looping to get the Winning Combination based on the 2nd Largest losing percentages
+      while(randomWinningCombination.isEmpty)
       {
-        bool isEmpty = false;
+        // Random the moves inside the winning combinations
         int randomIndex = random.nextInt(secondMaxIndex.indices.length);
-        int randomValue = secondMaxIndex.indices[randomIndex]; // the value is respented as set
+        int randomValue = secondMaxIndex.indices[randomIndex];
+
+        // Looping for checking the available moves
         for(int val in listOWinningSets[randomValue])
         {
+          // Check all the moves inside the winning combination is still available
           if(displayX0[val] == 'images/transparent.png')
           {
-            toberandom.add(val);
+            randomWinningCombination.add(val);
           }
         }
-        if(toberandom.isEmpty)
+        // Check the available move inside the winning combination is all been made
+        if(randomWinningCombination.isEmpty)
         {
           secondMaxIndex.indices.remove(randomValue);
         }
-        print('${toberandom} The highest value is ${secondMaxIndex.value} at index/indices: ${secondMaxIndex.indices}');
-
       }
     }
 
-    print('======================');
-
     setState(() {
-      int ranInd = random.nextInt(toberandom.length);
+      // To random a slot from the Winning Combination to play X move
+      int randomSlotToBePlaced = random.nextInt(randomWinningCombination.length);
+      if (!oTurn) {
+        displayX0[randomWinningCombination[randomSlotToBePlaced]] = 'images/white_x.png';
+        filledBoxes++;
 
-      displayX0[toberandom[ranInd]] = 'images/white_x.png';//Image.asset('images/white_x.png');
-      filledBoxes++;
+        // Play sound effect
+        playSound('audio/click.mp3', 1);
 
-      oTurn = !oTurn;
+        // Change player turns
+        oTurn = true;
+      }
+      // Check did it win after the move
       _checkWinner();
-    }
-    );
+
+      });
   }
 
+  // Check winner
   void _checkWinner() {
     // Check winning by rows whether 3 is matched
     // Checking 1st row
@@ -379,9 +385,11 @@ class _GamePageState extends State<GamePage> {
         displayX0[0] != 'images/transparent.png')
     {
       setState(() {
+
         resultDeclartion =
-        displayX0[0] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[0] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[0] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[0] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([0, 1, 2]);
         showMyDialog(context, false);
       });
@@ -392,8 +400,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[3] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[3] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[3] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[3] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[3] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([3, 4, 5]);
         showMyDialog(context, false);
       });
@@ -404,8 +413,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[6] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[6] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[6] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[6] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[6] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([6, 7, 8]);
         showMyDialog(context, false);
       });
@@ -418,8 +428,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[0] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[0] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[0] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[0] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[0] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([0, 3, 6]);
         showMyDialog(context, false);
       });
@@ -430,8 +441,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[1] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[1] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[1] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[1] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[1] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([1, 7, 4]);
         showMyDialog(context, false);
       });
@@ -442,8 +454,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[2] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[2] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[2] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[2] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[2] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([2, 5, 8]);
         showMyDialog(context, false);
       });
@@ -456,8 +469,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[0] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[0] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[0] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[0] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[0] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([0, 4, 8]);
         showMyDialog(context, false);
       });
@@ -468,8 +482,9 @@ class _GamePageState extends State<GamePage> {
         displayX0[2] != 'images/transparent.png') {
       setState(() {
         resultDeclartion =
-        displayX0[2] == 'images/white_x.png'?
-        'Player X Wins!' : 'Player O Wins!';
+        displayX0[2] == 'images/white_o.png' && widget.isPvP ? 'Player One Wins!' :
+        displayX0[2] == 'images/white_x.png' && widget.isPvP ? 'Player Two Wins!' :
+        displayX0[2] == 'images/white_o.png' && !widget.isPvP ? 'Player Wins!' : 'Player Lose!';
         matchIndexes.addAll([4, 6, 2]);
         showMyDialog(context, false);
         //stopTimer();
@@ -485,7 +500,20 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
+  // Pop-up window when a result is produced
   void showMyDialog(BuildContext context, bool isDraw) {
+    if(resultDeclartion.contains("Win"))
+      {
+        playSound("audio/win.mp3", 0.2);
+      }
+    else if (resultDeclartion == "Its a draw!")
+      {
+        playSound("audio/draw.mp3", 0.2);
+      }else
+      {
+        playSound("audio/fail.mp3", 0.2);
+      }
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -496,7 +524,7 @@ class _GamePageState extends State<GamePage> {
           },
           // AlertDialog will allow user to return to "Main Menu" when clicking "Quit"; To play again click "Play Again"
           child: AlertDialog(
-            title: Text('Result'),
+            title: Text('Result', style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold)),
             content: Text(resultDeclartion),
             actions: <Widget>[
               TextButton(
@@ -514,7 +542,7 @@ class _GamePageState extends State<GamePage> {
                 ),
                 child: Text('Main Menu'),
                 onPressed: () {
-                  _clearBoard();
+                  // Close the pop-up window
                   Navigator.popUntil(context, (route) => route.isFirst);
                 },
               ),
@@ -533,7 +561,9 @@ class _GamePageState extends State<GamePage> {
                 ),
                 child: Text('Play Again'),
                 onPressed: () {
+                  // Once click will the broad
                   _clearBoard();
+                  // Close the pop-up window
                   Navigator.of(context).pop();
                 },
               ),
@@ -547,13 +577,16 @@ class _GamePageState extends State<GamePage> {
   // Resetting the board to empty in order to play again
   void _clearBoard() {
     setState(() {
+      // Set all image to empty
       for (int i = 0; i < 9; i++) {
         displayX0[i] ='images/transparent.png';
       }
       matchIndexes.clear();
       resultDeclartion = '';
     });
+    // Reset the value for filledBoxed
     filledBoxes = 0;
+    // Reset player turns to Player One's turns
     oTurn = true;
   }
 

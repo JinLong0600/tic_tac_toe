@@ -111,7 +111,7 @@ class _SelectDifficultyState extends State<SelectDifficulty> {
                           child: Text('Back'),
                           style: OutlinedButton.styleFrom(
                             textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
-                            padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 50.0),
+                            padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 60.0),
                             primary: Colors.white,
                             side: BorderSide(width: 5, color: Colors.blue),
                             shape: const RoundedRectangleBorder(
