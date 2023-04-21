@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:tic_tac_toe/consts/text_style.dart';
 
 class GamePage extends StatefulWidget {
   //const GamePage({Key? key}) : super(key: key);
@@ -44,16 +45,16 @@ class _GamePageState extends State<GamePage> {
                 oTurn && widget.isPvP ? "Player One's turn" :
                 !oTurn && widget.isPvP ? "Player Two's turn" :
                 oTurn && !widget.isPvP ? "Player's turn" : "Computer's turn"
-            )
+            , style: font20())
         ),
         automaticallyImplyLeading: false,
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
                 colors: [
-                  Color(0xFF0A0068),
-                  Color(0xFF26007B),
-                  Color(0xFF42008D),
+                  Color(0xFF5B0933),
+                  Color(0xFF6B0933),
+                  Color(0xFF7B093C),
                 ],
                 stops: [
                   0.3,
@@ -64,10 +65,10 @@ class _GamePageState extends State<GamePage> {
                 end: Alignment.bottomCenter
             ),
           ),
-        ),
+        ), elevation: 50,
       ),
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
               colors: [
                 Color(0xFF2B0933),
@@ -91,12 +92,12 @@ class _GamePageState extends State<GamePage> {
         ),
         child: Column(
           children: [
-            SizedBox(height: 50, width: double.infinity,),
+            const SizedBox(height: 50, width: double.infinity,),
             Expanded(
               flex: 3,
               child: GridView.builder(
                   itemCount: 9,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
                   itemBuilder: (BuildContext, int index){
                     return GestureDetector(
                       onTap: () async {
@@ -123,8 +124,8 @@ class _GamePageState extends State<GamePage> {
                         decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(15),
                             border: Border.all(
-                              width: 10,
-                              color: Colors.black,
+                              width: 5,
+                              color: Colors.grey.shade400,
                             ),
                             gradient: RadialGradient(
                             colors : matchIndexes.contains(index) ? [Color(0xFF003A6C), Color(0xFF89CFF0), Color(0xFFB0E0E6)] : [Color(0xFF47046C), Color(0xFF731E9D), Color(0xFFA041C5)],
@@ -524,8 +525,8 @@ class _GamePageState extends State<GamePage> {
           },
           // AlertDialog will allow user to return to "Main Menu" when clicking "Quit"; To play again click "Play Again"
           child: AlertDialog(
-            title: Text('Result', style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold)),
-            content: Text(resultDeclartion),
+            title: Text('Result', style: fontGrey800_35()),
+            content: Text(resultDeclartion, style: fontGrey600_20(),),
             actions: <Widget>[
               TextButton(
                 style: ButtonStyle(
@@ -540,7 +541,7 @@ class _GamePageState extends State<GamePage> {
                     ),
                   ),
                 ),
-                child: Text('Main Menu'),
+                child: Text('Main Menu', style: font20(),),
                 onPressed: () {
                   // Close the pop-up window
                   Navigator.popUntil(context, (route) => route.isFirst);
@@ -559,7 +560,7 @@ class _GamePageState extends State<GamePage> {
                     ),
                   ),
                 ),
-                child: Text('Play Again'),
+                child: Text('Play Again', style: font20(),),
                 onPressed: () {
                   // Once click will the broad
                   _clearBoard();

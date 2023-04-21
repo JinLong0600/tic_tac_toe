@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tic_tac_toe/consts/text_style.dart';
 import 'package:tic_tac_toe/screen/game_page.dart';
+
 
 class SelectDifficulty extends StatefulWidget {
   const SelectDifficulty({Key? key}) : super(key: key);
@@ -58,7 +60,7 @@ class _SelectDifficultyState extends State<SelectDifficulty> {
                       ),
                       SizedBox(height: 30, width: double.infinity,),
                       Center(
-                        child: Text('Select Difficulty', style:  TextStyle(fontSize: 25.0, color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: Text('Select Difficulty', style: font35()),
                       ),
                     ],
                   ),
@@ -74,10 +76,10 @@ class _SelectDifficultyState extends State<SelectDifficulty> {
                           onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(isPvP: false, isPcEasy: true)));},
                           child: Text('Easy'),
                           style: OutlinedButton.styleFrom(
-                            textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                            textStyle: font20(),
                             padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 63.0),
                             primary: Colors.white,
-                            side: BorderSide(width: 5, color: Colors.blue),
+                            side: BorderSide(width: 5, color: Colors.grey.shade300),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(25)),
                             ),
@@ -92,10 +94,10 @@ class _SelectDifficultyState extends State<SelectDifficulty> {
                           onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(isPvP: false, isPcEasy: false)));},
                           child: Text('Normal'),
                           style: OutlinedButton.styleFrom(
-                            textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                            textStyle: font20(),
                             padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 50.0),
                             primary: Colors.white,
-                            side: BorderSide(width: 5, color: Colors.blue),
+                            side: BorderSide(width: 5, color: Colors.grey.shade300),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(25)),
                             ),
@@ -110,10 +112,10 @@ class _SelectDifficultyState extends State<SelectDifficulty> {
                           onPressed: () {Navigator.pop(context);},
                           child: Text('Back'),
                           style: OutlinedButton.styleFrom(
-                            textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                            textStyle: font20(),
                             padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 60.0),
                             primary: Colors.white,
-                            side: BorderSide(width: 5, color: Colors.blue),
+                            side: BorderSide(width: 5, color: Colors.grey.shade300),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(Radius.circular(25)),
                             ),

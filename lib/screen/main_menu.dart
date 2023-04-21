@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:tic_tac_toe/screen/game_page.dart';
 import 'package:tic_tac_toe/screen/select_difficulty.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:tic_tac_toe/consts/text_style.dart';
 
 class MainMenu extends StatefulWidget {
   //const MainMenu({Key? key}) : super(key: key);
@@ -42,7 +43,7 @@ class _MainMenuState extends State<MainMenu> {
     return MaterialApp(
       home: Scaffold(
         body: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Color(0xFF2B0933),
@@ -77,7 +78,7 @@ class _MainMenuState extends State<MainMenu> {
                     ),
                     SizedBox(height: 30, width: double.infinity,),
                     Center(
-                        child: Text('Tic Tac Toe', style:  TextStyle(fontSize: 25.0, color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: Text('Tic Tac Toe', style: font35()),
                       ),
                   ],
                 ),
@@ -88,12 +89,12 @@ class _MainMenuState extends State<MainMenu> {
                     Center(
                       child: OutlinedButton(
                         onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => GamePage(isPvP: true, isPcEasy: true)));},
-                        child: Text('Player VS Player'),
+                        child: Text('Player VS Player', style: TextStyle(fontWeight: FontWeight.bold),),
                         style: OutlinedButton.styleFrom(
-                          textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                          textStyle: font20(),
                           padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 65.0),
                           primary: Colors.white,
-                          side: BorderSide(width: 5, color: Colors.blue),
+                          side: BorderSide(width: 5, color: Colors.grey.shade300,),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.all(Radius.circular(25)),
                           ),
@@ -106,10 +107,10 @@ class _MainMenuState extends State<MainMenu> {
                         onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context) => SelectDifficulty()));},
                         child: Text('Player VS Computer'),
                         style: OutlinedButton.styleFrom(
-                          textStyle: TextStyle(fontSize: 20.0, color: Colors.white, fontWeight: FontWeight.bold),
+                          textStyle: font20(),
                           padding: EdgeInsets.symmetric(vertical: 25.0, horizontal: 50.0),
                           primary: Colors.white,
-                          side: BorderSide(width: 5, color: Colors.blue),
+                          side: BorderSide(width: 5, color: Colors.grey.shade300,),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.all(Radius.circular(25)),
                           ),
